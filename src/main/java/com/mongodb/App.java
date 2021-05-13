@@ -8,21 +8,34 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.mongodb.client.model.Filters.*;
+
 public class App
 {
     public static void main( String[] args ) {
         Logger.getLogger("org.mongodb.driver").setLevel(Level.WARNING);
         String connectionString = "mongodb+srv://Jeffrey:" + System.getenv("PASSWORD") + "@freecluster.h5y8j.mongodb.net/FreeCluster?retryWrites=true&w=majority";
         try(MongoClient mongoClient = MongoClients.create(connectionString)){
+            MongoCollection<Document> cookies = mongoClient.getDatabase("xmas").getCollection("cookies");
             //printDatabases(mongoClient)
-            createDocuments(mongoClient);
+            deleteDocuments(cookies);
+            createDocuments(cookies);
         }
     }
 
-    private static void createDocuments(MongoClient mongoClient) {
-        MongoCollection<Document> cookies = mongoClient.getDatabase("xmas").getCollection("cookies");
-        Document doc = new Document("name","chocolate chips");
-        cookies.insertOne(doc);
+    private static void deleteDocuments(MongoCollection<Document> cookies) {
+        cookies.deleteMany(in("color", List.of("blue", "orange")));
+    }
+
+    private static void createDocuments(MongoCollection<Document> cookies) {
+        List<Document> cookiesList = new ArrayList<>();
+        List<String> ingredients = List.of("flour", "eggs", "butter", "sugar", "red food coloring");
+
+        for(int i = 0; i < 10; i++){
+            cookiesList.add(new Document("cookie_id", i).append("color", "pink").append("ingredients", ingredients));
+        }
+
+        cookies.insertMany(cookiesList);
     }
 
     private static void printDatabases(MongoClient mongoClient) {
